@@ -40,39 +40,55 @@
 <body>
   <h2>Chat dengan WebSocket</h2>
   <div id="chat-box"></div>
+  <input type="text" id="target-ip" placeholder="Masukkan IP tujuan" />
+
   <input type="text" id="message" placeholder="Ketik pesan..." />
   <button onclick="sendMessage()">Kirim</button>
 
-  <script>
-    const ws = new WebSocket("ws://192.168.225.119:3000");
+<script>
+  const ws = new WebSocket("ws://192.168.225.119:3000");
+  let userIp = null;
 
-    ws.onopen = () => {
-      console.log("Terhubung ke WebSocket server.");
-    };
+  ws.onopen = () => {
+    console.log("Terhubung ke WebSocket server.");
+    
+    // Minta IP user dari server (jika server mendukung pengiriman IP)
+    ws.send(JSON.stringify({ type: "request_ip" }));
+  };
 
-    ws.onmessage = (event) => {
-      const message = event.data;
-      tambahPesan(message, "message-server");
-    };
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
 
-    function sendMessage() {
-      const input = document.getElementById("message");
-      const message = input.value.trim();
-      if (message) {
-        tambahPesan(message, "message-anda");
-        ws.send(message);
-        input.value = "";
-      } 
+    if (data.type === "ip") {
+      userIp = data.ip; // Simpan IP user saat ini
+    } else if (data.type === "message") {
+      const isMine = data.ip === userIp; // Bandingkan IP
+      tambahPesan(data.message, isMine ? "message-anda" : "message-server");
     }
+  };
 
-    function tambahPesan(pesan, kelasCSS) {
-      const chatBox = document.getElementById("chat-box");
-      const msgDiv = document.createElement("div");
-      msgDiv.classList.add("chat-message", kelasCSS);
-      msgDiv.textContent = pesan;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-  </script>
+function sendMessage() {
+  const input = document.getElementById("message");
+  const targetInput = document.getElementById("target-ip"); // Tambahkan input untuk target IP
+  const message = input.value.trim();
+  const targetIp = targetInput.value.trim(); // Ambil IP tujuan
+
+  if (message && targetIp) {
+    ws.send(JSON.stringify({ type: "message", message: message, target_ip: targetIp }));
+    tambahPesan(`(Ke ${targetIp}) ${message}`, "message-anda");
+    input.value = "";
+  }
+}
+
+  function tambahPesan(pesan, kelasCSS) {
+    const chatBox = document.getElementById("chat-box");
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("chat-message", kelasCSS);
+    msgDiv.textContent = pesan;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+
 </body>
 </html>
