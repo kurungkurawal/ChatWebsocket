@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat WebSocket</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #chat-box { 
+      width: 60%; 
+      height: 300px; 
+      border: 1px solid #ccc; 
+      overflow-y: auto; 
+      margin: auto; 
+      padding: 10px; 
+      text-align: left; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .chat-message {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin: 5px 0;
+      word-wrap: break-word;
+    }
+    .message-anda {
+      align-self: flex-end;
+      background-color: #dcf8c6; /* Hijau muda */
+      text-align: right;
+    }
+    .message-server {
+      align-self: flex-start;
+      background-color: #f1f1f1; /* Abu-abu */
+      text-align: left;
+    }
+    input, button { padding: 10px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Chat dengan WebSocket</h2>
+  <div id="chat-box"></div>
+  <input type="text" id="message" placeholder="Ketik pesan..." />
+  <button onclick="sendMessage()">Kirim</button>
+
+  <script>
+    const socket = io();
+
+    socket.on("connect", () => {
+      console.log("Terhubung ke server WebSocket");
+    });
+
+    socket.on("chatMessage", (data) => {
+      tambahPesan(`User ${data.id}: ${data.message}`, "message-server");
+    });
+
+    function sendMessage() {
+      const input = document.getElementById("message");
+      const message = input.value.trim();
+      if (message) {
+        tambahPesan(`Anda: ${message}`, "message-anda");
+        socket.emit("chatMessage", message);
+        input.value = "";
+      }
+    }
+
+    function tambahPesan(pesan, kelasCSS) {
+      const chatBox = document.getElementById("chat-box");
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("chat-message", kelasCSS);
+      msgDiv.textContent = pesan;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>

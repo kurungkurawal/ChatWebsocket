@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat WebSocket</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #chat-box { 
+      width: 60%; 
+      height: 300px; 
+      border: 1px solid #ccc; 
+      overflow-y: auto; 
+      margin: auto; 
+      padding: 10px; 
+      text-align: left; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .chat-message {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin: 5px 0;
+      display: inline-block;
+      word-wrap: break-word;
+    }
+    .message-anda {
+      align-self: flex-end;
+      background-color: #dcf8c6; /* Warna hijau muda */
+      text-align: right;
+    }
+    .message-server {
+      align-self: flex-start;
+      background-color: #f1f1f1; /* Warna abu-abu */
+      text-align: left;
+    }
+    input, button { padding: 10px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Chat dengan WebSocket</h2>
+  <div id="chat-box"></div>
+  <input type="text" id="message" placeholder="Ketik pesan..." />
+  <button onclick="sendMessage()">Kirim</button>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:8080");
+
+    ws.onopen = () => {
+      console.log("Terhubung ke WebSocket server.");
+    };
+
+    ws.onmessage = (event) => {
+      // Menambahkan pesan dari server
+      tambahPesan("Server", event.data, "message-server");
+    };
+
+    function tambahPesan(pengirim, pesan, kelasCSS) {
+      const chatBox = document.getElementById("chat-box");
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("chat-message", kelasCSS);
+      msgDiv.innerHTML = `<strong>${pengirim}:</strong> ${pesan}`;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("message");
+      const message = input.value.trim();
+      if (message) {
+        // Menambahkan pesan dari Anda di sebelah kanan
+        tambahPesan("Anda", message, "message-anda");
+        ws.send(message); // Mengirim pesan ke server
+        input.value = "";
+      }
+    }
+  </script>
+</body>
+</html>
