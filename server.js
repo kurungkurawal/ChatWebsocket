@@ -10,11 +10,13 @@ const io = new Server(server);
 app.use(express.static("public"));
 
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
-
+  const clientIp = socket.handshake.address; // Mendapatkan IP pengguna
+    console.log(`${clientIp}`);
+ 
     // Menerima pesan dari client dan menyiarkan ke semua user
     socket.on("chatMessage", (msg) => {
-        io.emit("chatMessage", { id: socket.id, message: msg });
+        io.emit("chatMessage", { id:clientIp, message: msg });
+        
     });
 
     // Menangani disconnect
