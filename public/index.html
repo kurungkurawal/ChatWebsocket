@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat WebSocket</title>
-  <script src="/socket.io/socket.io.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; }
     #chat-box { 
@@ -45,24 +44,25 @@
   <button onclick="sendMessage()">Kirim</button>
 
   <script>
-    const socket = io();
+    const ws = new WebSocket("ws://192.168.225.119:3000");
 
-    socket.on("connect", () => {
-      console.log("Terhubung ke server WebSocket");
-    });
+    ws.onopen = () => {
+      console.log("Terhubung ke WebSocket server.");
+    };
 
-    socket.on("chatMessage", (data) => {
-      tambahPesan(`User ${data.id}: ${data.message}`, "message-server");
-    });
+    ws.onmessage = (event) => {
+      const message = event.data;
+      tambahPesan(message, "message-server");
+    };
 
     function sendMessage() {
       const input = document.getElementById("message");
       const message = input.value.trim();
       if (message) {
-        tambahPesan(`Anda: ${message}`, "message-anda");
-        socket.emit("chatMessage", message);
+        tambahPesan(message, "message-anda");
+        ws.send(message);
         input.value = "";
-      }
+      } 
     }
 
     function tambahPesan(pesan, kelasCSS) {
